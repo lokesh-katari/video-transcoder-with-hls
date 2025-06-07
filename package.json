@@ -1,0 +1,16 @@
+{
+  "name": "video-transcoder",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "bullmq": "^5.53.2",
+    "dotenv": "^16.5.0",
+    "ioredis": "^5.6.1"
+  }
+}
