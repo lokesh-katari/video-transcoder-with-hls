@@ -16,3 +16,9 @@ A full-stack video uploader and HLS (HTTP Live Streaming) transcoder pipeline us
 ---
 
 ## Architecture
+![image](https://github.com/user-attachments/assets/639afdc8-2b03-4684-b8bc-70b4d2b4d003)
+
+## Demo 
+
+https://github.com/user-attachments/assets/86c71594-e810-440f-bf31-cd535b3e23b0
+
