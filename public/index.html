@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Video Gallery</title>
+ <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet" />
+  <!-- Quality Menu Button CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/videojs-contrib-quality-levels@2.0.9/dist/videojs-contrib-quality-levels.css" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      /* color: white; */
+      font-size: 2.5rem;
+      font-weight: 300;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .video-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 25px;
+      padding: 0 10px;
+    }
+
+    .video-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .video-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+      background: rgba(255, 255, 255, 1);
+    }
+
+    .video-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .video-id {
+      font-size: 0.9rem;
+      color: #555;
+      word-break: break-all;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .loading {
+      text-align: center;
+      color: white;
+      font-size: 1.2rem;
+      margin-top: 50px;
+    }
+
+    .no-videos {
+      text-align: center;
+      color: white;
+      font-size: 1.1rem;
+      margin-top: 50px;
+      opacity: 0.8;
+    }
+
+    /* Modal */
+    .modal-container {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-content {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .modal-title {
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+
+    .close-btn {
+      font-size: 2rem;
+      color: white;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    #videoPlayer {
+      width: 100% !important;
+      height: auto !important;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* Video.js custom styling */
+    .video-js .vjs-control-bar {
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+    }
+
+    .video-js .vjs-big-play-button {
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .video-js .vjs-big-play-button:hover {
+      background: rgba(0, 0, 0, 0.9);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: scale(1.1);
+    }
+
+    /* Quality selector styling */
+    .vjs-quality-selector .vjs-menu-button .vjs-menu .vjs-menu-content {
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+    }
+
+    .vjs-quality-selector .vjs-menu-button .vjs-menu .vjs-menu-item {
+      color: white;
+      transition: all 0.2s ease;
+    }
+
+    .vjs-quality-selector .vjs-menu-button .vjs-menu .vjs-menu-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .video-list {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+      }
+      
+      .video-card {
+        padding: 15px;
+      }
+      
+      .modal-content {
+        max-width: 95vw;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .video-list {
+        grid-template-columns: 1fr;
+      }
+      
+      .modal-title {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+    <div style="margin-bottom: 30px; text-align: center;">
+  <h2>📤 Upload a Video</h2>
+  <form id="uploadForm">
+    <input type="file" id="videoInput" name="video" accept="video/*" required />
+    <button type="submit">Upload</button>
+    <div id="uploadStatus" style="margin-top: 10px; font-size: 0.95rem;"></div>
+  </form>
+</div>
+  <div class="container">
+    <h1>HLS Video Transcoder</h1>
+    <div class="video-list" id="videoList">
+      <div class="loading">Loading videos...</div>
+    </div>
+  </div>
+
+  <!-- Modal Player -->
+  <div class="modal-container" id="modalContainer">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Video Player</div>
+        <button class="close-btn" id="closeModal">&times;</button>
+      </div>
+      <div class="video-container">
+        <video 
+          id="videoPlayer" 
+          class="video-js vjs-default-skin" 
+          controls 
+          preload="auto"
+          data-setup='{}'
+        >
+          <p class="vjs-no-js">
+            To view this video please enable JavaScript, and consider upgrading to a web browser that
+            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>.
+          </p>
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
+  <script>
+
+    const uploadForm = document.getElementById("uploadForm");
+const videoInput = document.getElementById("videoInput");
+const uploadStatus = document.getElementById("uploadStatus");
+
+uploadForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const file = videoInput.files[0];
+  if (!file) {
+    uploadStatus.textContent = "Please select a video file.";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("video", file);
+
+  uploadStatus.textContent = "Uploading...";
+
+  try {
+    const response = await fetch("/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    if (response.ok) {
+      uploadStatus.textContent = "Video uploaded and queued for processing!";
+      videoInput.value = ""; 
+    } else {
+      const errorText = await response.text();
+      uploadStatus.textContent = " Upload failed: " + errorText;
+    }
+  } catch (error) {
+    uploadStatus.textContent = " Error uploading video.";
+    console.error(error);
+  }
+});
+
+    const videoListEl = document.getElementById("videoList");
+    const modal = document.getElementById("modalContainer");
+    const closeModal = document.getElementById("closeModal");
+    const modalTitle = document.getElementById("modalTitle");
+       const player = videojs('videoPlayer', {
+      fluid: true,
+      responsive: true,
+      html5: {
+        vhs: {
+          overrideNative: true
+        }
+      }
+    });
+    let currentVideoId = null;
+
+    function createQualitySelector(player) {
+      const MenuButton = videojs.getComponent('MenuButton');
+      const Menu = videojs.getComponent('Menu');
+      const MenuItem = videojs.getComponent('MenuItem');
+
+      class QualityMenuItem extends MenuItem {
+        constructor(player, options) {
+          const label = options.label || options.quality.height + 'p';
+          super(player, Object.assign(options, { label }));
+          this.quality = options.quality;
+        }
+
+        handleClick() {
+          const qualityLevels = this.player().qualityLevels();
+          
+          // Disable all quality levels
+          for (let i = 0; i < qualityLevels.length; i++) {
+            qualityLevels[i].enabled = false;
+          }
+          
+          // Enable selected quality level
+          if (this.quality.index !== -1) {
+            qualityLevels[this.quality.index].enabled = true;
+          } else {
+            // Auto mode - enable all levels
+            for (let i = 0; i < qualityLevels.length; i++) {
+              qualityLevels[i].enabled = true;
+            }
+          }
+        }
+      }
+
+      class QualityMenuButton extends MenuButton {
+        constructor(player, options) {
+          super(player, options);
+          this.controlText('Quality');
+          
+          // Update button when quality changes
+          player.qualityLevels().on('change', () => {
+            this.update();
+          });
+        }
+
+        createItems() {
+          const qualityLevels = this.player().qualityLevels();
+          const items = [];
+
+          // Add Auto option
+          items.push(new QualityMenuItem(this.player(), {
+            label: 'Auto',
+            quality: { index: -1, height: 'auto' }
+          }));
+
+          // Add individual quality levels
+          for (let i = 0; i < qualityLevels.length; i++) {
+            const quality = qualityLevels[i];
+            items.push(new QualityMenuItem(this.player(), {
+              label: quality.height + 'p',
+              quality: { index: i, height: quality.height }
+            }));
+          }
+
+          return items;
+        }
+      }
+
+      // Register components
+      videojs.registerComponent('QualityMenuButton', QualityMenuButton);
+      
+      // Add button to control bar
+      player.ready(() => {
+        const qualityButton = new QualityMenuButton(player, {
+          title: 'Quality'
+        });
+        
+        player.controlBar.addChild(qualityButton, {}, 
+          player.controlBar.children().length - 2
+        );
+      });
+    }
+
+    // Wait for player to be ready and HLS to load
+    player.ready(() => {
+      player.on('loadedmetadata', () => {
+        // Check if quality levels are available
+        if (player.qualityLevels && player.qualityLevels().length > 1) {
+          createQualitySelector(player);
+        } else {
+          // Retry after a short delay
+          setTimeout(() => {
+            if (player.qualityLevels && player.qualityLevels().length > 1) {
+              createQualitySelector(player);
+            }
+          }, 1000);
+        }
+      });
+    });
+
+    // Handle errors
+    player.on('error', function() {
+      console.error('Video.js error:', player.error());
+    });
+
+    // Add some debug info
+    player.on('loadstart', () => {
+      console.log('Load started');
+    });
+
+    player.on('loadeddata', () => {
+      console.log('Data loaded');
+      if (player.qualityLevels) {
+        console.log('Available quality levels:', player.qualityLevels().length);
+      }
+    });
+    // Fetch videos
+    fetch("/videos")
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.text();
+      })
+      .then(html => {
+        // Extract video IDs from backend-generated HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const links = doc.querySelectorAll("a[href^='/watch/']");
+
+        if (links.length === 0) {
+          videoListEl.innerHTML = '<div class="no-videos">No videos found.</div>';
+          return;
+        }
+
+        videoListEl.innerHTML = "";
+        links.forEach(link => {
+          const id = link.getAttribute("href").split("/watch/")[1];
+          const card = document.createElement("div");
+          card.className = "video-card";
+          card.innerHTML = `
+            <div class="video-icon">🎬</div>
+            <div class="video-id">${id}</div>
+          `;
+          card.addEventListener("click", () => {
+            showModal(id);
+          });
+          videoListEl.appendChild(card);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching videos:', error);
+        videoListEl.innerHTML = '<div class="no-videos">Error loading videos. Please try again later.</div>';
+      });
+
+    function showModal(videoId) {
+      currentVideoId = videoId;
+      const url = `/hls/${videoId}/master.m3u8`;
+      
+      modalTitle.textContent = `Playing: ${videoId}`;
+      
+      // Initialize player if not already done
+      if (!player) {
+        initializePlayer();
+      }
+      
+      // Set video source
+      player.src({
+        type: "application/x-mpegURL",
+        src: url
+      });
+      
+      // Show modal
+      modal.style.display = "flex";
+      
+      // Auto-play after a short delay to ensure proper loading
+      setTimeout(() => {
+        if (player && !player.paused()) {
+          player.play().catch(e => {
+            console.log('Auto-play prevented by browser:', e);
+          });
+        }
+      }, 500);
+    }
+
+    function hideModal() {
+      modal.style.display = "none";
+      if (player) {
+        player.pause();
+        player.currentTime(0);
+      }
+      currentVideoId = null;
+    }
+
+    // Event listeners
+    closeModal.addEventListener('click', hideModal);
+
+    // Close modal on ESC
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.style.display === "flex") {
+        hideModal();
+      }
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        hideModal();
+      }
+    });
+
+    // Initialize player on page load
+    document.addEventListener('DOMContentLoaded', initializePlayer);
+  </script>
+</body>
+</html>
